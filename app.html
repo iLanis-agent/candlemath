@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CandleMath - honest candle math</title>
+<style>
+  :root { --bg:#181310; --card:#221a15; --ink:#f6efe6; --dim:#bfae99; --acc:#e0b25c; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding:28px 24px 8px; max-width:980px; margin:0 auto; display:flex; justify-content:space-between; align-items:baseline; }
+  h1 { margin:0; font-size:28px; }
+  h1 span { color:var(--acc); }
+  nav a { color:var(--dim); text-decoration:none; font-size:14px; }
+  main { max-width:980px; margin:0 auto; padding:16px 24px 60px; display:grid; gap:18px; }
+  .card { background:var(--card); border-radius:14px; padding:20px; }
+  .card h2 { margin:0 0 12px; font-size:13px; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  label { display:block; font-size:13px; color:var(--dim); margin-bottom:4px; }
+  input, select { width:100%; background:#1b1510; border:1px solid #52432f; color:var(--ink); border-radius:8px; padding:9px 10px; font-size:15px; }
+  .hint { font-size:12.5px; color:var(--dim); margin-top:10px; }
+  button { cursor:pointer; border:0; border-radius:9px; padding:11px 16px; font-size:15px; background:var(--acc); color:#33260a; font-weight:600; }
+  button.ghost { background:#423522; color:var(--ink); font-weight:500; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .verdict { font-size:17px; line-height:1.65; }
+  .verdict b { color:var(--acc); }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:16px; }
+  .stat { background:#1b1510; border-radius:10px; padding:12px; }
+  .stat .v { font-size:19px; font-weight:700; color:var(--acc); }
+  .stat .k { font-size:12px; color:var(--dim); margin-top:2px; }
+  table.bd { width:100%; border-collapse:collapse; margin-top:6px; font-size:14.5px; }
+  table.bd td { padding:7px 4px; border-bottom:1px solid #382c1f; }
+  table.bd td:last-child { text-align:right; color:var(--acc); font-weight:600; }
+  .fine { font-size:12.5px; color:var(--dim); margin-top:8px; }
+  a { color:var(--acc); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Candle<span>Math</span></h1>
+  <nav><a href="index.html">about</a></nav>
+</header>
+<main>
+  <section class="card">
+    <h2>The candle</h2>
+    <div class="grid">
+      <div>
+        <label for="wax">Wax</label>
+        <select id="wax"></select>
+      </div>
+      <div>
+        <label for="dia">Container inside diameter (in)</label>
+        <input id="dia" type="number" min="1" max="6" step="0.1" value="3">
+      </div>
+      <div>
+        <label for="fill">Fill height (in)</label>
+        <input id="fill" type="number" min="0.5" max="8" step="0.1" value="3.5">
+      </div>
+      <div>
+        <label for="load">Fragrance load (%)</label>
+        <input id="load" type="number" min="0" max="12" step="0.5" value="9">
+      </div>
+    </div>
+    <div class="row" id="presets"></div>
+    <div class="hint">Measure the inside of the jar and how high you will pour - not the jar's full height. Headspace is not candle.</div>
+  </section>
+
+  <section class="card">
+    <h2>Your pour</h2>
+    <div class="verdict" id="verdict"></div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card">
+    <h2>The batch</h2>
+    <div class="grid">
+      <div>
+        <label for="bag">Wax on hand (lb)</label>
+        <input id="bag" type="number" min="0.5" max="100" step="0.5" value="10">
+      </div>
+    </div>
+    <div class="stats" id="batchStats"></div>
+  </section>
+
+  <section class="card">
+    <h2>Cost per candle</h2>
+    <div class="grid">
+      <div>
+        <label for="waxPrice">Wax ($/lb)</label>
+        <input id="waxPrice" type="number" min="0" max="30" step="0.1" value="3.20">
+      </div>
+      <div>
+        <label for="foPrice">Fragrance oil ($/oz)</label>
+        <input id="foPrice" type="number" min="0" max="10" step="0.05" value="1.10">
+      </div>
+      <div>
+        <label for="jarCost">Jar + lid ($)</label>
+        <input id="jarCost" type="number" min="0" max="20" step="0.05" value="1.50">
+      </div>
+      <div>
+        <label for="wickCost">Wick + sticker ($)</label>
+        <input id="wickCost" type="number" min="0" max="5" step="0.05" value="0.15">
+      </div>
+    </div>
+    <div class="stats" id="costStats"></div>
+    <table class="bd" id="costTable"></table>
+  </section>
+
+  <section class="card">
+    <h2>The honest part</h2>
+    <div class="verdict" style="font-size:15px">
+      A 13.7 fl oz jar does not hold 13.7 oz of wax. Soy wax is 14% lighter than water, so it takes 12.3 - buy wax by jar volume and you come up short every batch, every time. Wick sizes here are starting points from the wax maker's charts, not gospel: the first burn of any new jar-and-wax combo is a test burn. If it tunnels, wick up; if it mushrooms, wick down.
+    </div>
+  </section>
+</main>
+<script src="engine.js"></script>
+<script>
+(function () {
+  var waxSel = document.getElementById('wax');
+  Object.keys(CandleEngine.WAXES).forEach(function (k) {
+    var o = document.createElement('option');
+    o.value = k; o.textContent = CandleEngine.WAXES[k].name;
+    waxSel.appendChild(o);
+  });
+  var PRESETS = [
+    ['8 oz jelly jar', 'soy', 2.5, 2.5, 10],
+    ['Classic tumbler', 'soy', 3, 3.5, 9],
+    ['Big 3-wick style', 'coconut', 4, 3, 10],
+    ['Beeswax pillar jar', 'beeswax', 2.75, 4, 0]
+  ];
+  var pw = document.getElementById('presets');
+  PRESETS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'ghost'; b.textContent = p[0];
+    b.addEventListener('click', function () {
+      waxSel.value = p[1];
+      document.getElementById('dia').value = p[2];
+      document.getElementById('fill').value = p[3];
+      document.getElementById('load').value = p[4];
+      render();
+    });
+    pw.appendChild(b);
+  });
+  function stat(v, k) { return '<div class="stat"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>'; }
+  function num(id) { return Number(document.getElementById(id).value) || 0; }
+  function render() {
+    var waxKey = waxSel.value;
+    var wax = CandleEngine.WAXES[waxKey];
+    var dia = num('dia'), fill = num('fill'), load = num('load');
+    if (dia <= 0 || fill <= 0) return;
+    var vol = CandleEngine.containerVolumeFloz(dia, fill);
+    var wOz = CandleEngine.waxOz(vol, waxKey);
+    var fo = CandleEngine.fragranceOz(wOz, load);
+    var pour = wOz + fo;
+    var wick = CandleEngine.wickFor(waxKey, dia);
+    document.getElementById('verdict').innerHTML =
+      'That pour holds <b>' + CandleEngine.r2(vol) + ' fl oz</b>, which is <b>' + CandleEngine.r2(wOz) + ' oz of ' + wax.name.toLowerCase() + '</b> - not ' + CandleEngine.r2(vol) + '. ' +
+      (load > 0 ? 'Add <b>' + CandleEngine.r2(fo) + ' oz</b> of fragrance oil and pour <b>' + CandleEngine.r2(pour) + ' oz</b> total. ' : 'No fragrance, so pour weight stays ' + CandleEngine.r2(pour) + ' oz. ') +
+      'Start with a <b>' + wick + '</b> wick.';
+    document.getElementById('stats').innerHTML =
+      stat(CandleEngine.r2(vol) + ' fl oz', 'fill volume') +
+      stat(CandleEngine.r2(wOz) + ' oz', 'wax weight') +
+      stat(CandleEngine.r2(fo) + ' oz', 'fragrance (' + load + '%)') +
+      stat(wick, 'wick to try first');
+    var bag = num('bag');
+    var n = CandleEngine.candlesPerBatch(bag, wOz);
+    document.getElementById('batchStats').innerHTML =
+      stat(n, 'candles from ' + bag + ' lb') +
+      stat(CandleEngine.r2(n * fo) + ' oz', 'fragrance for the batch') +
+      stat(CandleEngine.r2(bag * 16 - n * wOz) + ' oz', 'wax left over');
+    var wp = num('waxPrice'), fp = num('foPrice'), jc = num('jarCost'), wc = num('wickCost');
+    var cost = CandleEngine.costPerCandle(wOz, wp, fo, fp, jc, wc);
+    document.getElementById('costStats').innerHTML = stat('$' + cost.toFixed(2), 'cost per candle');
+    document.getElementById('costTable').innerHTML =
+      '<tr><td>Wax</td><td>$' + (wOz / 16 * wp).toFixed(2) + '</td></tr>' +
+      '<tr><td>Fragrance oil</td><td>$' + (fo * fp).toFixed(2) + '</td></tr>' +
+      '<tr><td>Jar + lid</td><td>$' + jc.toFixed(2) + '</td></tr>' +
+      '<tr><td>Wick + sticker</td><td>$' + wc.toFixed(2) + '</td></tr>';
+  }
+  ['wax', 'dia', 'fill', 'load', 'bag', 'waxPrice', 'foPrice', 'jarCost', 'wickCost'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
